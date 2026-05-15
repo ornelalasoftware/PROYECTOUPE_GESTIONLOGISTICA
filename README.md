@@ -5,6 +5,15 @@
 Este proyecto fue desarrollado como trabajo académico para la materia **Estructura de Datos y Algoritmos II (EDA II)**.
 
 La aplicación permite gestionar una red logística de distribución mediante el uso de **teoría de grafos**, permitiendo administrar ciudades, rutas de conexión y calcular el camino óptimo entre dos puntos.
+---
+
+## Como compilar y ejecutar
+
+-Compilar:
+g++ main.cpp grafo.cpp sistemagestionlogistico.cpp -o programa.exe
+
+-Ejecutar:
+.\programa.exe
 
 ---
 
