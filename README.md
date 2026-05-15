@@ -40,10 +40,17 @@ La aplicación permite gestionar una red logística de distribución mediante el
 
 PROYECTOUPE_GESTIONLOGISTICA/
 ├── main.cpp
+
 ├── grafo.h
+
 ├── grafo.cpp
+
 ├── sistemagestionlogistico.h
+
 ├── sistemagestionlogistico.cpp
+
 ├── ciudad.h
+
 ├── ciudades.dat
+
 └── README.md
