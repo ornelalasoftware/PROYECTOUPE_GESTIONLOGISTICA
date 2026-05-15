@@ -39,6 +39,7 @@ La aplicación permite gestionar una red logística de distribución mediante el
 ## 📂 Estructura del Proyecto
 
 PROYECTOUPE_GESTIONLOGISTICA/
+
 ├── main.cpp
 
 ├── grafo.h
