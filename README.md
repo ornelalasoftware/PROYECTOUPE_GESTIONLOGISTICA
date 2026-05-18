@@ -1,6 +1,6 @@
-# 🚚 Sistema Inteligente de Gestión Logística y Optimización de Rutas
+# Sistema Inteligente de Gestión Logística y Optimización de Rutas
 
-## 📌 Descripción del Proyecto
+## Descripción del Proyecto
 
 Este proyecto fue desarrollado como trabajo académico para la materia **Estructura de Datos y Algoritmos II (EDA II)**.
 
@@ -17,7 +17,7 @@ g++ main.cpp grafo.cpp sistemagestionlogistico.cpp -o programa.exe
 
 ---
 
-## 🎯 Objetivos
+## Objetivos
 
 - Gestionar ciudades dentro de una red logística.
 - Crear, modificar y eliminar rutas entre nodos.
@@ -28,7 +28,7 @@ g++ main.cpp grafo.cpp sistemagestionlogistico.cpp -o programa.exe
 
 ---
 
-## 🛠 Tecnologías Utilizadas
+## Tecnologías Utilizadas
 
 - **Lenguaje:** C++
 - **Paradigma:** Programación Orientada a Objetos (POO)
@@ -45,7 +45,7 @@ g++ main.cpp grafo.cpp sistemagestionlogistico.cpp -o programa.exe
 
 ---
 
-## 📂 Estructura del Proyecto
+## Estructura del Proyecto
 
 PROYECTOUPE_GESTIONLOGISTICA/
 
