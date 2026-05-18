@@ -5,15 +5,6 @@
 
 using namespace std;
 
-// Función auxiliar para limpiar la pantalla (opcional)
-void limpiarPantalla() {
-    #ifdef _WIN32
-        system("cls");
-    #else
-        system("clear");
-    #endif
-}
-
 void mostrarMenu() {
     cout << "\n==============================================" << endl;
     cout << "   SISTEMA LOGISTICO INTELIGENTE - CORDOBA    " << endl;
@@ -49,9 +40,9 @@ int main() {
     do {
         mostrarMenu();
         if (!(cin >> opcion)) { // Validar que entre un número
-            cin.clear();
-            cin.ignore(1000, '\n');
-            continue;
+            cin.clear(); //desbloque al cin porque si le colocan una letra se enoja
+            cin.ignore(1000, '\n'); //limpia el buffer hasta 1000 caracteres hasta que hagan un salto de linea
+            continue; //continua el bucle y vuelve a mostrarMenu()
         }
 
         switch (opcion) {
@@ -72,16 +63,16 @@ int main() {
                     cout << "\n[EXITO] Ruta encontrada: " << resultado.distanciaTotal << " km." << endl;
                     cout << "Estado: " << resultado.descripcionTexto << endl;
                 } else {
-                    cout << "\n[ERROR] No hay rutas disponibles debido a los cortes." << endl;
+                    cout << "\n[ERROR] No hay rutas disponibles" << endl;
                 }
                 break;
             }
 
             case 3: {
-                int o, d;
+                int origenId, destinoId; 
                 cout << "Ingrese IDs de la ruta bloqueada (ej: 0 1): ";
-                cin >> o >> d;
-                sistema.cortarRuta(o, d);
+                cin >> origenId >> destinoId;
+                sistema.cortarRuta(origenId, destinoId);
                 break;
             }
 
