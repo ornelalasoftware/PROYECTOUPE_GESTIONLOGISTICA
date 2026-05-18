@@ -1,17 +1,16 @@
 #include <iostream>
-#include <vector>
 #include <string>
-#include "sistemagestionlogistico.h" // Conectamos con la lógica de archivos y grafos
+#include "sistemagestionlogistico.h" // conectamos con la lógica de archivos y grafos
 
 using namespace std;
 
 void mostrarMenu() {
     cout << "\n==============================================" << endl;
-    cout << "   SISTEMA LOGISTICO INTELIGENTE - CORDOBA    " << endl;
+    cout << "   SISTEMA DE GESTION LOGISTICA - CORDOBA    " << endl;
     cout << "==============================================" << endl;
     cout << " 1. Ver listado de ciudades" << endl;
-    cout << " 2. Calcular ruta mas corta (Dijkstra)" << endl;
-    cout << " 3. Reportar corte de ruta (Contingencia)" << endl;
+    cout << " 2. Calcular ruta mas corta" << endl;
+    cout << " 3. Reportar corte de ruta" << endl;
     cout << " 4. Ver historial de consultas" << endl;
     cout << " 5. Guardar datos y Salir" << endl;
     cout << "==============================================" << endl;
@@ -21,7 +20,7 @@ void mostrarMenu() {
 int main() {
     SistemaLogistico sistema;
 
-    // --- CARGA INICIAL (Solo la primera vez o para demostración) ---
+    // CARGA INICIAL DEMOSTRATIVA.. HAY QUE CREAR EL ARCHIVO BINARIO TODAVIA :(
     // Agregamos los nodos (Ciudades de Córdoba)
     sistema.agregarCiudad("Cordoba Capital", 0, 0);      // ID 0
     sistema.agregarCiudad("Villa Maria", 150, 150);      // ID 1
@@ -34,15 +33,15 @@ int main() {
     sistema.agregarRuta(1, 2, 130.0); // Villa María - Río Cuarto
     sistema.agregarRuta(0, 3, 35.0);  // Cba - Carlos Paz
     sistema.agregarRuta(0, 4, 210.0); // Cba - San Francisco
-    sistema.agregarRuta(3, 2, 215.0); // Carlos Paz - Río Cuarto (Ruta alternativa)
+    sistema.agregarRuta(3, 2, 215.0); // Carlos Paz - Río Cuarto 
 
     int opcion;
     do {
         mostrarMenu();
         if (!(cin >> opcion)) { // Validar que entre un número
-            cin.clear(); //desbloque al cin porque si le colocan una letra se enoja
+            cin.clear(); //desbloquea al cin porque si le colocan una letra se enoja
             cin.ignore(1000, '\n'); //limpia el buffer hasta 1000 caracteres hasta que hagan un salto de linea
-            continue; //continua el bucle y vuelve a mostrarMenu()
+            opcion = -1; // le asignamos un valor inválido para que el switch vaya al default y no rompa nada
         }
 
         switch (opcion) {
@@ -50,21 +49,42 @@ int main() {
                 cout << "\n--- CIUDADES EN LA RED ---" << endl;
                 cout << "0: Cordoba Cap. | 1: Villa Maria | 2: Rio Cuarto" << endl;
                 cout << "3: Carlos Paz   | 4: San Francisco" << endl;
+                cout << "----------------------------------------\n";
                 break;
 
-            case 2: {
+            case 2: { // Caso para calcular ruta óptima
                 int origen, destino;
-                cout << "Ingrese ID de ciudad de salida: "; cin >> origen;
-                cout << "Ingrese ID de ciudad de destino: "; cin >> destino;
+                cout << "Ingrese el ID de la ciudad de origen: ";
+                cin >> origen;
+                cout << "Ingrese el ID de la ciudad de destino: ";
+                cin >> destino;
 
+                // llamada a función que ejecuta Dijkstra
                 ResultadoRuta resultado = sistema.calcularRutaOptima(origen, destino);
 
-                if (resultado.distanciaTotal < 999999) {
-                    cout << "\n[EXITO] Ruta encontrada: " << resultado.distanciaTotal << " km." << endl;
-                    cout << "Estado: " << resultado.descripcionTexto << endl;
+                cout << "\n----------------------------------------\n";
+                cout << "ESTADO: " << resultado.descripcionTexto << "\n";
+
+                if (resultado.camino != nullptr && resultado.cantidadCiudades > 0) {
+                    cout << "DISTANCIA TOTAL: " << resultado.distanciaTotal << " km\n";
+                    cout << "RUTA RECOMENDADA: ";
+
+                    // Recorre vector para mostrar las ciudades
+                    for (int i = 0; i < resultado.cantidadCiudades; i++) {
+                        int idCiudadActual = resultado.camino[i];
+                        
+                        cout << sistema.obtenerNombreCiudad(idCiudadActual);//imprimimos nombre de ciudad
+
+                        //ponemos flecha menos en la ultima
+                        if (i < resultado.cantidadCiudades - 1) {
+                            cout << " -> ";
+                        }
+                    }
+                    cout << "\n";
                 } else {
-                    cout << "\n[ERROR] No hay rutas disponibles" << endl;
+                    cout << "No hay ruta disponible para mostrar\n";
                 }
+                cout << "----------------------------------------\n";
                 break;
             }
 
@@ -73,6 +93,8 @@ int main() {
                 cout << "Ingrese IDs de la ruta bloqueada (ej: 0 1): ";
                 cin >> origenId >> destinoId;
                 sistema.cortarRuta(origenId, destinoId);
+                cout <<"Se ha informado correctamente al sistema que la ruta esta bloqueada"<<endl;
+                cout << "----------------------------------------\n";
                 break;
             }
 
@@ -86,7 +108,8 @@ int main() {
                 break;
 
             default:
-                cout << "Opcion no valida." << endl;
+                cout << "Opcion no valida" << endl;
+                cout << "----------------------------------------\n";
         }
     } while (opcion != 5);
 

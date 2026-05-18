@@ -5,6 +5,13 @@
 
 SistemaLogistico::SistemaLogistico() {
     grafo = new Grafo(10);
+    
+    cantidadCiudades = 0;
+    capacidadCiudades = 10; // Capacidad inicial estándar
+    ciudades = new Ciudad[capacidadCiudades]; // Se reserva memoria para las primeras 10 ciudades
+    
+    // la pila arranca vacía apuntando a null
+    historial = nullptr; 
 }
 //Constructor: cuando el sistema arranca, reserva memoria dinámica para un nuevo 
 //objeto Grafo que se configura inicialmente para soportar hasta 10 ciudades
@@ -12,6 +19,20 @@ SistemaLogistico::SistemaLogistico() {
 
 SistemaLogistico::~SistemaLogistico() {
     delete grafo;
+    
+    //liberamos el arreglo dinámico de ciudades.. importante!!
+    delete[] ciudades;
+
+    //vaciamos la pila de historial nodo por nodo para evitar fugas de memoria.. importante!!
+    while (historial != nullptr) {
+        NodoHistorial* auxiliar = historial;
+        historial = historial->siguiente; //avanzamos al siguiente nodo de abajo
+        
+        //como cada ResultadoRuta tiene un arreglo dinámico para el camino, lo liberamos uno por uno
+        delete[] auxiliar->dato.camino; 
+        
+        delete auxiliar; //elimininamos el contenedor auxiliar (nodo)
+    }
 }
 //Destructor: cuando el programa se cierra, libera la memoria que ocupaba 
 //el objeto grafo para evitar fugas de memoria.
@@ -24,12 +45,25 @@ void SistemaLogistico::inicializar() {
 //para recuperar el mapa guardado en el disco.
 
 void SistemaLogistico::agregarCiudad(std::string nombre, float x, float y) {
+    
+    //si el vector se llena, se tiene que expandir manualmente
+    if (cantidadCiudades == capacidadCiudades) {
+        capacidadCiudades *= 2; //duplicamos la capacidad máxima
+        Ciudad* nuevoArreglo = new Ciudad[capacidadCiudades]; //creamos un arreglo nuevo más grande
+
+        //copiamos todas las ciudades del anterior al nuevo
+        for (int i = 0; i < cantidadCiudades; i++) {
+            nuevoArreglo[i] = ciudades[i];
+        }
+
+        delete[] ciudades; // destruimos el viejo vector que quedó chico
+        ciudades = nuevoArreglo; // apuntamos al nuevo espacio ampliado
+    }
+
     Ciudad nueva;
     //Se crea una estructura temporal/auxiliar de tipo Ciudad llamada nueva
 
-    nueva.id = ciudades.size();
-    //.size() es una funcion de "std:" te devuelve la cantidad de elementos 
-    //que hay dentro del vector ciudades en ese preciso momento
+    nueva.id = cantidadCiudades;//contador de ciudades
 
     strncpy(nueva.nombre, nombre.c_str(), 49);
     //strncpy: Copia el texto de nombre dentro del arreglo de caracteres fijo de la estructura Ciudad
@@ -40,17 +74,16 @@ void SistemaLogistico::agregarCiudad(std::string nombre, float x, float y) {
     nueva.x = x;
     nueva.y = y;
 
-    ciudades.push_back(nueva);//la funcion push_back(nueva) hace tres tareas importantes:
-    //Revisa el espacio: Verifica si el vector tiene suficiente memoria reservada para un elemento más. Si no la tiene, el vector pide automáticamente más memoria a la computadora y se expande solo.
-    //Copia el objeto: Toma una copia exacta de la estructura nueva (que contiene el id, el nombre y las coordenadas x, y de la ciudad) y la coloca en la última posición disponible.
-    //Actualiza el tamaño: Incrementa internamente el contador de elementos. Así, la próxima vez que llames a .size(), el número reflejará que hay una ciudad más.
-    //Guarda las coordenadas espaciales en la estructura y mete la nueva ciudad al final del vector ciudades
+    // se le asigna la nueva ciudad en la última posición libre e incrementamos el contador
+    ciudades[cantidadCiudades] = nueva;
+    cantidadCiudades++;
+    //queda apuntando al siguiente elemento que marcara el id del proximo
 }
 
 void SistemaLogistico::agregarRuta(int origen, int destino, float km) {
     grafo->agregarRuta(origen, destino, km);
 }
-//El sistema logístico no sabe cómo manejar grafos directamente, así que le "delega" el 
+//el sistema logístico no sabe cómo manejar grafos directamente, así que le "delega" el 
 //trabajo a su objeto interno grafo usando el operador flecha (->) porque es un puntero
 
 void SistemaLogistico::cortarRuta(int origen, int destino) {
@@ -60,17 +93,42 @@ void SistemaLogistico::cortarRuta(int origen, int destino) {
 
 ResultadoRuta SistemaLogistico::calcularRutaOptima(int origen, int destino) {
     ResultadoRuta resultado = grafo->calcularDijkstra(origen, destino);
-    //Le pide al grafo que ejecute el Algoritmo de Dijkstra entre el origen y el destino
-    //El camino y los kilómetros se guardan en la variable resultado.
+    //le pide al grafo que ejecute el Algoritmo de Dijkstra entre el origen y el destino
+    //el camino y los kilómetros se guardan en la variable resultado.
 
-    historial.push(resultado);
-    //push() se usa en pilas y colas para insertar un elemento al final
-    //historial es una pila declarada en sistemagestionlogistico.h
+    apilarHistorial(resultado);
+    //método para registrar el resultado en la pila historial
     
     return resultado;
-    //guarda una copia de este resultado en la Pila (std::stack)
-    //Al usar push, esta última búsqueda se coloca en la cima de la pila
     //Finalmente, devuelve el resultado
+}
+
+// se implementa el método para apilar
+void SistemaLogistico::apilarHistorial(ResultadoRuta ruta) {
+    NodoHistorial* nuevoNodo = new NodoHistorial(); //se crea un nodo dinámico en memoria
+    
+    nuevoNodo->dato = ruta; // Almacenamos el resultado.
+    if (ruta.camino != nullptr) {
+        nuevoNodo->dato.camino = new int[ruta.cantidadCiudades];
+        for (int i = 0; i < ruta.cantidadCiudades; i++) {
+            nuevoNodo->dato.camino[i] = ruta.camino[i];
+        }
+    }//como ruta.camino es un vector dinámico, para evitar que dos
+    // nodos apunten al mismo bloque de memoria, creamos una copia
+
+    nuevoNodo->siguiente = historial; // el nuevo nodo apunta al que estaba en la cima
+    historial = nuevoNodo;            // el nuevo nodo pasa a ser la nueva cima de la pila
+}
+
+//se implementa el método para desapilar
+void SistemaLogistico::desapilarHistorial() {
+    if (historial != nullptr) {
+        NodoHistorial* auxiliar = historial; 
+        historial = historial->siguiente;    //la cima baja al nodo inferior
+        
+        delete[] auxiliar->dato.camino;      //se libera el camino dinámico de la ruta
+        delete auxiliar;                     //se destruye el nodo superior desapilado
+    }
 }
 
 void SistemaLogistico::guardarDatos() {
@@ -83,15 +141,11 @@ void SistemaLogistico::guardarDatos() {
     if (!archivo.is_open()) {
         std::cout << "Error al guardar archivo.\n";
         return;
-    }//Chequea que el archivo se abra correctamente, sino tira error
+    }//chequea que el archivo se abra correctamente, sino tira error
 
-    for (const auto& ciudad : ciudades) {
-        //ciclo for moderno (llamado range-based for)
-        //Va pasando por cada ciudad que esté guardada dentro del vector ciudades, una por una
-        //const auto& = & opera por referencia y const se asegura que sea solo de lectura
-
+    for (int i = 0; i < cantidadCiudades; i++) {
         archivo.write(
-            reinterpret_cast<const char*>(&ciudad),//reinterpreta al struct como char y le manda por referencia la direccion
+            reinterpret_cast<const char*>(&ciudades[i]),//reinterpreta al struct como char y le manda por referencia la direccion
             sizeof(Ciudad) //calcula tamaño en bytes de Ciudad
         );
         //Al hacer todo esto la ciudad se guarda en el archivo .dat como una copia identica o "foto"
@@ -113,21 +167,21 @@ void SistemaLogistico::cargarDatos() {
     //archivo.is_open(): Es un método propio de los flujos de fstream
     //Si el archivo no existe, sale en silencio sin lanzar errores
 
-    ciudades.clear();
-    //.clear() limpia el vector ciudades para que no se vuelvan a duplicar datos
-
-    Ciudad ciudad; //auxiliar para guardar datos que se usan en el bucle que sigue
+    // se reinicia el contador de ciudades a 0
+    cantidadCiudades = 0;
+   
+    Ciudad ciudadAuxiliar; //auxiliar para guardar datos que se usan en el bucle que sigue
 
     while (
         archivo.read(
-            reinterpret_cast<char*>(&ciudad),
+            reinterpret_cast<char*>(&ciudadAuxiliar),
             sizeof(Ciudad)
         )
     ) {
-        ciudades.push_back(ciudad);
+        agregarCiudad(ciudadAuxiliar.nombre, ciudadAuxiliar.x, ciudadAuxiliar.y);
     }
     //bucle de lectura: archivo.read extrae del archivo el número exacto de bytes 
-    //que componen una Ciudad y los vuelca en la variable temporal ciudad
+    //que componen una Ciudad y los vuelca en la variable temporal ciudadAuxiliar
     //Si todo sale bien, mete esa ciudad en el vector ciudades
     //el ciclo se detiene automáticamente cuando se llega al final del archivo (EOF)
 
@@ -137,29 +191,44 @@ void SistemaLogistico::cargarDatos() {
 void SistemaLogistico::mostrarHistorial() {
     std::cout << "\n===== HISTORIAL =====\n";
 
-    std::stack<ResultadoRuta> copia = historial;
-    //Crea una copia completa de la pila historial. Esto se hace porque para leer una pila 
-    //hay que "destruirla" (vaciarla), y no queremos perder el historial real del sistema
+    //hacemos una copia de historial para despues recorrerla sin tocar la original
+    NodoHistorial* auxiliar = historial;
+    //se crea una copia completa de la pila historial
 
-    while (!copia.empty()) {
-        ResultadoRuta actual = copia.top();
-        //Mientras la pila copia no esté vacía, inspecciona el elemento que está arriba del 
-        //todo mediante .top()
-        //en pilas el elemento de arriba es el mas reciente
+    while (auxiliar != nullptr) {
+        ResultadoRuta actual = auxiliar->dato;//guarda el dato del elemento que esta en la cima en variable actual
 
         std::cout
             << "Distancia: "
-            << actual.distanciaTotal
+            << actual.distanciaTotal//Muestra los kilómetros en la consola
             << " km\n";
 
-        copia.pop();
-        //Muestra los kilómetros en la consola y usa .pop() para eliminar el elemento de la 
-        //cima de la copia, permitiendo que en la siguiente vuelta del ciclo se pueda 
-        //ver el viaje anterior.
+        //se valida si la ruta tiene un camino calculado antes de recorrerlo
+        if (actual.camino != nullptr && actual.cantidadCiudades > 0) {
+            std::cout << "Camino: ";
+            
+            // se recorre el vector dinámico imprimiendo cada ciudad de la ruta
+            for (int i = 0; i < actual.cantidadCiudades; i++) {
+                std::cout << actual.camino[i];
+                
+                //detallito estético para poner una flechita entre ciudades menos la ultima jeje
+                if (i < actual.cantidadCiudades - 1) {
+                    std::cout << " -> ";
+                }
+            }
+            std::cout << "\n";//salto de linea para que no quede pegao
+        } else {
+            std::cout << "Camino: " << actual.descripcionTexto << "\n";
+            //la descripcion.texto es la que se encuentra en el struct ResultadoRuta
+        }
+        
+        std::cout << "-----------------------\n"; 
+        //linea para dividir cada viaje
+
+        auxiliar = auxiliar->siguiente;
+        //y luego queda apuntando al siguiente nodo
     }
-}//Cuando el ciclo while vuelve a empezar, mira el nuevo tope, lo imprime, lo destruye 
-//con .pop(), y así sucesivamente hasta que la pila se queda completamente vacía (empty()) 
-//y el bucle termina. Por eso hicimos la copia del historial.
+}//termina cuando apunta a un nodo vacio(null)
 
 Grafo& SistemaLogistico::getGrafo() {
     return *grafo;
@@ -168,3 +237,11 @@ Grafo& SistemaLogistico::getGrafo() {
 //"desapuntado" (utilizando el asterisco *) en forma de referencia (Grafo&), 
 //permitiendo que otras partes del programa interactúen con la matriz sin romper el 
 //encapsulamiento. Esto es para evitar que alguien lo pueda modificar y romperlo
+
+std::string SistemaLogistico::obtenerNombreCiudad(int id) {
+    //verificamos que el ID sea válido y exista
+    if (id >= 0 && id < cantidadCiudades) {
+        return ciudades[id].nombre;
+    }
+    return "Ciudad Desconocida";//si no encuentra nada
+}

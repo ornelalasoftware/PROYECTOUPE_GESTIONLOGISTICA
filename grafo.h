@@ -6,9 +6,10 @@
 
 const float INF = 999999.0f;
 
-struct ResultadoRuta {
+;struct ResultadoRuta {
+    int* camino;
+    int cantidadCiudades;
     float distanciaTotal;
-    std::vector<int> camino;
     std::string descripcionTexto;
 };
 

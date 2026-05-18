@@ -31,10 +31,16 @@ void Grafo::cortarRuta(int origen, int destino) {
 
 ResultadoRuta Grafo::calcularDijkstra(int inicio, int fin) {
 
-    std::vector<float> distancias(n, INF);//se crea un vector dinamico para guardar las distancias, todas comienzan con valor INF
-    std::vector<bool> visitados(n, false);//se crea un vector dinamico para marcar las ciudades visitadas, todas son F al principio
-    std::vector<int> padres(n, -1);//en vez de padres poner ciudad_padre/ se crea una lista para recordar de que ciudad vinimps
-    //sirve para reconstruir la ruta al final, empieza en -1 porque no hay ninguna ruta al principio(padre)
+    float* distancias = new float[n]; // se crea un arreglo dinámico para guardar las distancias
+    bool* visitados = new bool[n];    // se crea un arreglo dinámico para marcar las ciudades visitadas
+    int* padres = new int[n];          // en vez de padres poner ciudad_padre/ se crea una lista para recordar de que ciudad vinimos
+
+    // Como los arreglos dinámicos con 'new' no se inicializan solos, usamos este bucle para darles sus valores iniciales
+    for (int i = 0; i < n; i++) {
+        distancias[i] = INF; // todas comienzan con valor INF
+        visitados[i] = false; // todas son F al principio
+        padres[i] = -1; // empieza en -1 porque no hay ninguna ruta al principio(padre)
+    }
 
     distancias[inicio] = 0;//la distancia que hay entre una ciudad origen es 0
 
@@ -71,10 +77,16 @@ ResultadoRuta Grafo::calcularDijkstra(int inicio, int fin) {
 
     ResultadoRuta resultado;
     resultado.distanciaTotal = distancias[fin];
-    //Crea el objeto para el reporte final y le asigna la distancia definitiva que costó llegar a la ciudad destino(fin)
+    //Crea el objeto para el reporte final y le asigna la distancia definitiva que costo llegar a la ciudad destino(fin)
 
     if (distancias[fin] == INF) {
         resultado.descripcionTexto = "No existe ruta.";
+        
+        //Antes de salir de la función con 'return', debemos liberar la memoria de los arreglos auxiliares
+        delete[] distancias;
+        delete[] visitados;
+        delete[] padres;
+        
         return resultado;
     }
     //Si la distancia final sigue siendo INF 
@@ -83,28 +95,35 @@ ResultadoRuta Grafo::calcularDijkstra(int inicio, int fin) {
 
     int actual = fin;
 
+    //contamos cuántas ciudades componen el camino final
+    int contadorCiudades = 0;
     while (actual != -1) {
-        resultado.camino.push_back(actual);//push_back() es una funcion que añade un elemento al final de contenedores dinamicos
-        //redimensiona el contenedor si es necesario
+        contadorCiudades++;
         actual = padres[actual];
     }
-    //Como Dijkstra guarda los padres de atrás para adelante, 
-    //empezamos en la ciudad fin y vamos saltando hacia atrás (padres[actual]) 
-    //guardando cada ciudad en la lista camino, hasta llegar al origen (-1).
 
-    std::reverse(//funcion que da vuelta el orden de los elementos, es una funcion de <algorithm>
-        resultado.camino.begin(),
-        resultado.camino.end()
-    );
-    //Como el camino se guardó al revés (ej: [Destino, Ciudad_B, Ciudad_A, Inicio]), 
-    //usamos std::reverse para darle la vuelta y dejarlo en el orden correcto: 
-    //[Inicio, Ciudad_A, Ciudad_B, Destino].
+    // Reservamos la memoria exacta para el arreglo del camino y guardamos su tamaño en la estructura
+    resultado.camino = new int[contadorCiudades];
+    resultado.cantidadCiudades = contadorCiudades;
+
+    // Como Dijkstra guarda los padres de atrás para adelante, 
+    // llenamos el arreglo dinámico desde la última posición hacia la primera (de fin a inicio).
+    actual = fin;
+    for (int i = contadorCiudades - 1; i >= 0; i--) {
+        resultado.camino[i] = actual;
+        actual = padres[actual];
+    }
 
     resultado.descripcionTexto = "Ruta calculada correctamente.";
 
+    // liberamos los arreglos auxiliares creados dentro de la función para evitar fugas de memoria
+    delete[] distancias;
+    delete[] visitados;
+    delete[] padres;
+
     return resultado;
 }
-//Escribe el mensaje de éxito y devuelve todo el resultado
+//escribe el mensaje de éxito y devuelve todo el resultado
 
 Grafo::~Grafo() {
 
