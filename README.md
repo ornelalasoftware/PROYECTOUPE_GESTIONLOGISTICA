@@ -49,18 +49,18 @@ g++ main.cpp grafo.cpp sistemagestionlogistico.cpp -o programa.exe
 
 PROYECTOUPE_GESTIONLOGISTICA/
 
-├── main.cpp
+- main.cpp
 
-├── grafo.h
+- grafo.h
 
-├── grafo.cpp
+- grafo.cpp
 
-├── sistemagestionlogistico.h
+- sistemagestionlogistico.h
 
-├── sistemagestionlogistico.cpp
+- sistemagestionlogistico.cpp
 
-├── ciudad.h
+- ciudad.h
 
-├── ciudades.dat
+- ciudades.dat
 
-└── README.md
+- README.md
