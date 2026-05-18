@@ -36,8 +36,8 @@ g++ main.cpp grafo.cpp sistemagestionlogistico.cpp -o programa.exe
 ## Estructuras de Datos
 
 - Matriz de Adyacencia
-- `vector`
-- `stack`
+- vector
+- stack
 
 ### Algoritmo
 
